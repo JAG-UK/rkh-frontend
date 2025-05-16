@@ -28,13 +28,14 @@ export default function OverrideKYCButton({ application }: OverrideKYCButtonProp
     
     const { account, signStateMessage } = useAccount();
     const { toast } = useToast();
-    const [ approvalSecret, setApprovalSecret ] = useState("");
     const [ overrideReason, setOverrideReason ] = useState("No reason given");
 
     const { isPending, error: isError, data: hash, reset } = useWriteContract();
     const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
       hash,
     })
+
+    const action = application.status === "KYC_PHASE" ||  application.status === "SUBMISSION_PHASE" ? "approve" : "revoke"
 
     const handleOpenChange = (open: boolean) => {
         reset();
@@ -63,13 +64,13 @@ export default function OverrideKYCButton({ application }: OverrideKYCButtonProp
 
     const submitOverride = async () => {
 
-        const signature = await signStateMessage(
-            `KYC Override for ${application.id}`
-        )
+        const msg = action === 'approve' ? `KYC Override for ${application.id}` : `KYC Revoke for ${application.id}`
+        const signature = await signStateMessage(msg)
         const pubKey = account?.wallet?.getPubKey() || Buffer.from("0x0000000000000000000000000000000000000000")
         const safePubKey = pubKey?.toString('base64')
 
         const data = {
+          action: action,
           reason: overrideReason || "No reason given",
           reviewerAddress: account?.address || "0x0000000000000000000000000000000000000000",
           reviewerPublicKey: safePubKey,
@@ -77,6 +78,8 @@ export default function OverrideKYCButton({ application }: OverrideKYCButtonProp
         }
 
         overrideKYC(application.id, data)
+
+        setIsOpen(false);
     }
 
     return (
@@ -84,6 +87,7 @@ export default function OverrideKYCButton({ application }: OverrideKYCButtonProp
             <Button
                 className="w-[150px]"
                 onClick={() => setIsOpen(true)}
+                id={`btnOverrideKYC-${application.id}`}
             >
                 Override KYC
             </Button>
@@ -103,10 +107,10 @@ export default function OverrideKYCButton({ application }: OverrideKYCButtonProp
                     {!isPending && (
                       <div className="flex justify-center flex-col gap-2">
                         <Label>
-                          {`Overriding KYC for ${application.name} for ${application.datacap} PiBs.`}
+                          {`${action === 'approve' ? 'Approve' : 'Revoke'} KYC for ${application.name} for ${application.datacap} PiBs.`}
                         </Label>
                         <Label>
-                          {"Please confirm your Ledger is still connected then confirm PiB amount and allocator type to approve."}
+                          {"Please confirm your Ledger is still connected then confirm on the device screen."}
                         </Label>
                       </div>
                     )}

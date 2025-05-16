@@ -120,8 +120,10 @@ export async function fetchRole(address: string): Promise<AccountRole> {
 /* Note: This function is the one that allows a Governance Team member to override
  * KYC and approve an application, NOT the webhook for the formal KYC app */
 export async function overrideKYC(id: string, payload: any) {
-  const url = `${API_BASE_URL}/applications/${id}/approveKYC`;
+  const url = `${API_BASE_URL}/applications/${id}/${payload.action === "approve" ? "approveKYC" : "revokeKYC"}`;
 
+  console.log(payload)
+  
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -135,8 +137,8 @@ export async function overrideKYC(id: string, payload: any) {
     }
 
   } catch (error) {
-    console.error("Failed to approve KYC:", error);
-    throw new Error("Failed to approve KYC");
+    console.error("Failed to override KYC:", error);
+    throw new Error("Failed to override KYC");
   }
 }
 

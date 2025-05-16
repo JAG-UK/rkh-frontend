@@ -114,6 +114,7 @@ export function ApplicationsPanel({
                   </TableCell>
                   <TableCell>
                     <ApplicationActionButton application={application} />
+                    <span className="hidden"><OverrideKYCButton application={application} /></span>
                   </TableCell>
                   <TableCell className="flex items-center">
                     <DropdownMenu>
@@ -147,6 +148,25 @@ export function ApplicationsPanel({
                           >
                             Submit KYC
                           </Link>
+                          </DropdownMenuItem>
+                        )}
+                        { (application.status === 'GOVERNANCE_REVIEW_PHASE' && account?.role === AccountRole.GOVERNANCE_TEAM) && (
+                          <DropdownMenuItem>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const realBtn = document.querySelector<HTMLElement>(`[id="btnOverrideKYC-${application.id}"]`);
+                                if (!realBtn) {
+                                  console.warn(`Could not find '[id="btnOverrideKYC-${application.id}"]'`);
+                                  return;
+                                }
+                                realBtn.click();
+                              }}
+                          >
+                            Revoke KYC
+                          </Button>
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
